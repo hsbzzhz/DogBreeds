@@ -1,0 +1,24 @@
+import json
+
+from flask import Blueprint, request, current_app
+
+from app.data.data_handler import DataProcess
+
+decision_bp = Blueprint('image', __name__, url_prefix='/api')
+
+
+@decision_bp.route('/api/get-images', methods=['GET'])
+def get_images_info():
+    args = request.args
+    num = args.get('number', '')
+
+    # 对num进行校验
+    return_dict = {'return_code': '200', 'result': None}
+    return json.dumps(return_dict)
+
+
+@decision_bp.route('/api/get-records', methods=['GET'])
+def get_records_info():
+    params = request.get_json()
+    data_process = DataProcess(params)
+    return data_process.gen_dimensions()
