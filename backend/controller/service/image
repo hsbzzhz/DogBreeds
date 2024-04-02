@@ -1,0 +1,15 @@
+import requests
+
+
+class ImageService:
+
+    @staticmethod
+    def get_image_by_num(num: int):
+        url = "https://dog.ceo/api/breeds/image/random/{}".format(num)
+
+        headers = {
+            'Connection': 'close'
+        }
+        response = requests.request("GET", url, headers=headers, data={}, timeout=3)
+        response.close()
+        print(response.text)
