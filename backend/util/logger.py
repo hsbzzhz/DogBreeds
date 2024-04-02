@@ -1,4 +1,10 @@
-def getLogHandler(log_base: str):
+import logging
+import os
+import time
+from logging.handlers import RotatingFileHandler
+
+
+def get_log_handler(log_base: str):
     # 创建日志文件
     log_file_name = 'log-' + time.strftime('%Y-%m-%d', time.localtime(time.time())) + '.log'
 

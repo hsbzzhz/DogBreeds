@@ -1,22 +1,18 @@
-from flask import Flask, request
+from flask import Flask
 from flask_cors import CORS
 
-from app.controller.decision_tree import decision_bp
-from app.utils.logger import getLogHandler
+from controller.images import images_bp
 from settings import BaseConfig
+from util.logger import get_log_handler
 
 
 def create_app():
     app = Flask(__name__)
-    app.register_blueprint(decision_bp)
+    app.register_blueprint(images_bp)
 
     app.config.from_object("settings.BaseConfig")
 
-    app.logger.addHandler(getLogHandler(BaseConfig.LOGGING_PATH))
-
-    @app.before_request
-    def before_request():
-        app.logger.info(request.method + ' ' + request.url)
+    app.logger.addHandler(get_log_handler(BaseConfig.LOGGING_PATH))
 
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
