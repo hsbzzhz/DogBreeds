@@ -20,7 +20,10 @@
       <h3>Chat History</h3>
       <ul>
         <li v-for="(message, index) in chatHistory" :key="index">
-          {{ message.executionTime }} {{ message.input }} {{message.result}} {{message.valid}}
+          <span class="status-light" :class="{'status-green': message.status === 200, 'status-red': message.status !== 200}"></span>
+          <span class="execution-time">{{new Date(parseInt(message.execution_time)).toLocaleString() }}</span>
+
+<!--          {{message.status}} {{message.execution_time}} {{ message.input }}-->
         </li>
       </ul>
     </div>
@@ -43,30 +46,48 @@ export default {
       modules: [Pagination, Navigation],
       dogImages: ["https://images.dog.ceo/breeds/coonhound/n02089078_2106.jpg",
         "https://images.dog.ceo/breeds/retriever-flatcoated/n02099267_3494.jpg"],
-      chatHistory: [
-        {"executionTime": "20240401", "input": "5", "result": "ertteww", "valid": true},
-        {"executionTime": "20240401", "input": "zz", "result": "ertteww", "valid": false},
-        {"executionTime": "20240401", "input": "9", "result": "ffgddd", "valid": true}],
+      chatHistory: [],
       userInput: '',
       errorMessage: '',
     }
+  },
+  created() {
+    this.fetchChatHistory();
   },
   components: {
     Swiper,
     SwiperSlide
   },
   methods: {
-
-    generateDogImages() {
+    async generateDogImages() {
       this.errorMessage = '';
       const inputNumber = parseInt(this.userInput, 10);
       if (isNaN(inputNumber) || inputNumber < 1 || inputNumber > 8) {
         this.errorMessage = '请输入 1 到 8 之间的整数';
       }
+      const res = await this.$axios.get(`http://127.0.0.1:5001/api/get-images`, {
+        params: {
+          number: inputNumber,
+          startTime: Date.now()
+        }
+      })
+      if (res.data.status !== 200) {
+        this.errorMessage = res.data.message
+      } else {
+        this.dogImages = res.data.message
+      }
 
-    //  初始化dogImages 和 history
+      //  更新 history
+      this.chatHistory.unshift(res.data)
+      console.log(this.chatHistory)
     },
-  },
+    async fetchChatHistory() {
+      const res = await this.$axios.get('http://127.0.0.1:5001/api/get-records');
+      if (res.data.status === 200) {
+        this.chatHistory = res.data.message;
+      }
+    }
+    },
 }
 </script>
 
