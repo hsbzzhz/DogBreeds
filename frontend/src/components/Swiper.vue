@@ -20,10 +20,11 @@
       <h3>Chat History</h3>
       <ul>
         <li v-for="(message, index) in chatHistory" :key="index">
-          <span class="status-light" :class="{'status-green': message.status === 200, 'status-red': message.status !== 200}"></span>
-          <span class="execution-time">{{new Date(parseInt(message.execution_time)).toLocaleString() }}</span>
-
-<!--          {{message.status}} {{message.execution_time}} {{ message.input }}-->
+          <span class="input">{{ message.input }}</span>
+          <span class="status-light"
+                :class="{'status-green': message.status === 200, 'status-red': message.status !== 200}"></span>
+          <span class="execution-time">{{ new Date(parseInt(message.execution_time)).toLocaleString() }}</span>
+          <!--          {{message.status}} {{message.execution_time}} {{ message.input }}-->
         </li>
       </ul>
     </div>
@@ -44,14 +45,13 @@ export default {
   data() {
     return {
       modules: [Pagination, Navigation],
-      dogImages: ["https://images.dog.ceo/breeds/coonhound/n02089078_2106.jpg",
-        "https://images.dog.ceo/breeds/retriever-flatcoated/n02099267_3494.jpg"],
+      dogImages: [],
       chatHistory: [],
       userInput: '',
       errorMessage: '',
     }
   },
-  created() {
+  mounted() {
     this.fetchChatHistory();
   },
   components: {
@@ -59,35 +59,35 @@ export default {
     SwiperSlide
   },
   methods: {
-    async generateDogImages() {
+    generateDogImages() {
       this.errorMessage = '';
       const inputNumber = parseInt(this.userInput, 10);
       if (isNaN(inputNumber) || inputNumber < 1 || inputNumber > 8) {
         this.errorMessage = '请输入 1 到 8 之间的整数';
       }
-      const res = await this.$axios.get(`http://127.0.0.1:5001/api/get-images`, {
+      this.$axios.get(`http://127.0.0.1:5001/api/get-images`, {
         params: {
           number: inputNumber,
           startTime: Date.now()
         }
-      })
-      if (res.data.status !== 200) {
-        this.errorMessage = res.data.message
-      } else {
-        this.dogImages = res.data.message
-      }
+      }).then(res => {
+        if (res.data.status !== 200) {
+          this.errorMessage = res.data.message
+        } else {
+          this.dogImages = res.data.message
+        }
 
-      //  更新 history
-      this.chatHistory.unshift(res.data)
-      console.log(this.chatHistory)
+        //  更新 history
+        this.chatHistory.unshift(res.data)
+      })
     },
-    async fetchChatHistory() {
-      const res = await this.$axios.get('http://127.0.0.1:5001/api/get-records');
-      if (res.data.status === 200) {
-        this.chatHistory = res.data.message;
-      }
+    fetchChatHistory() {
+      this.$axios.get('http://127.0.0.1:5001/api/get-records')
+          .then(response => {
+            this.chatHistory = response.data.message;
+          });
     }
-    },
+  },
 }
 </script>
 
@@ -113,5 +113,45 @@ export default {
 .swiper-bottom {
   top: 200px;
   font-size: 24px;
+}
+
+.chat-history {
+  margin-bottom: 20px; /* 根据需要调整间距 */
+}
+
+.chat-history ul {
+  list-style: none;
+  padding: 0;
+}
+
+.chat-history li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.chat-history .status-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+
+.chat-history .status-green {
+  background-color: green;
+}
+
+.chat-history .status-red {
+  background-color: red;
+}
+
+.chat-history .message-content {
+  flex-grow: 1;
+}
+
+.chat-history .execution-time {
+  color: #888;
 }
 </style>
