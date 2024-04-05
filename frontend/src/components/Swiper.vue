@@ -5,69 +5,70 @@
     <button @click="generateDogImages">Generate</button>
 
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-    <swiper v-if="!errorMessage" ref="mySwiper" :modules="modules" navigation :pagination="{ clickable:true }">
-      <swiper-slide v-for="(image, index) in dogImages" :key="index">
-        <img :src="image" :alt="index">
-      </swiper-slide>
 
-      <!-- Add Pagination -->
-      <div class="swiper-pagination" slot="pagination"></div>
-      <div class="swiper-bottom">Dog breeds</div>
-    </swiper>
-
-
+    <el-carousel v-if="dogImages.length > 0"
+                 :interval="5000" arrow="always" trigger="click">
+      <el-carousel-item v-for="(image, index) in dogImages" :key="index">
+        <img @click="showFullScreenImage(image)" :src="image" class="carousel-image" :alt="index">
+      </el-carousel-item>
+    </el-carousel>
+    <div v-if="showModal" class="fullscreen-modal" @click="showModal = false">
+      <img :src="currentImage" class="fullscreen-image" alt=""/>
+    </div>
     <div class="chat-history" v-if="chatHistory.length > 0">
       <h3>Chat History</h3>
-      <ul>
-        <li v-for="(message, index) in chatHistory" :key="index">
-          <span class="input">{{ message.input }}</span>
-          <span class="status-light"
-                :class="{'status-green': message.status === 200, 'status-red': message.status !== 200}"></span>
-          <span class="execution-time">{{ new Date(parseInt(message.execution_time)).toLocaleString() }}</span>
-          <!--          {{message.status}} {{message.execution_time}} {{ message.input }}-->
-        </li>
-      </ul>
+
+      <el-table
+          :data="chatHistory"
+          style="width: 100%"
+          :row-class-name="tableRowClassName">
+        <el-table-column
+            prop="execution_time"
+            label="date"
+            width="180">
+        </el-table-column>
+        <el-table-column
+            prop="input"
+            label="input"
+            width="180">
+        </el-table-column>
+        <el-table-column
+            prop="message"
+            label="result">
+        </el-table-column>
+      </el-table>
     </div>
   </div>
 </template>
 
 <script>
-import {Pagination, Navigation} from 'swiper';
-// Import Swiper Vue.js components
-import {Swiper, SwiperSlide} from 'swiper/vue';
-
-// Import Swiper styles
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/pagination';
 
 export default {
   data() {
     return {
-      modules: [Pagination, Navigation],
       dogImages: [],
       chatHistory: [],
       userInput: '',
       errorMessage: '',
+      showModal: false, // 控制模态层的显示
+      currentImage: '',
     }
   },
   mounted() {
     this.fetchChatHistory();
   },
-  components: {
-    Swiper,
-    SwiperSlide
-  },
+  components: {},
   methods: {
     generateDogImages() {
       this.errorMessage = '';
-      const inputNumber = parseInt(this.userInput, 10);
-      if (isNaN(inputNumber) || inputNumber < 1 || inputNumber > 8) {
-        this.errorMessage = '请输入 1 到 8 之间的整数';
+      this.dogImages = [];
+      const inputNumber = Number(this.userInput);
+      if(!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
+        this.errorMessage = 'Please enter an integer from 1 to 8';
       }
       this.$axios.get(`http://127.0.0.1:5001/api/get-images`, {
         params: {
-          number: inputNumber,
+          number: this.userInput,
           startTime: Date.now()
         }
       }).then(res => {
@@ -78,14 +79,32 @@ export default {
         }
 
         //  更新 history
+        res.data.execution_time = new Date(parseInt(res.data.execution_time)).toLocaleString()
         this.chatHistory.unshift(res.data)
       })
     },
     fetchChatHistory() {
       this.$axios.get('http://127.0.0.1:5001/api/get-records')
           .then(response => {
-            this.chatHistory = response.data.message;
+            const records = response.data.message;
+            if (records.length > 0) {
+              records.forEach(item => {
+                item.execution_time = new Date(parseInt(item.execution_time)).toLocaleString()
+              })
+            }
+            this.chatHistory = records
           });
+    },
+    showFullScreenImage(image) {
+      this.currentImage = image;
+      this.showModal = true;
+    },
+    tableRowClassName({row, rowIndex}) {
+      if (row.status !== 200) {
+        return 'warning-row';
+      }
+      return 'success-row';
+
     }
   },
 }
@@ -93,65 +112,44 @@ export default {
 
 
 <style scoped>
-
-.swiper-container {
-  /*width: 100%;*/
-  /*height: 100%;*/
+.el-carousel__item h3 {
+  color: #475669;
+  font-size: 18px;
+  opacity: 0.75;
+  line-height: 300px;
+  margin: 0;
 }
 
-.swiper-slide img {
-  /*width: 100%;*/
-  /*height: 100%;*/
-  /*object-fit: cover;*/
+.carousel-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
-.swiper-button-next,
-.swiper-button-prev {
-  color: #fff; /* Adjust arrow colors as needed */
-}
-
-.swiper-bottom {
-  top: 200px;
-  font-size: 24px;
-}
-
-.chat-history {
-  margin-bottom: 20px; /* 根据需要调整间距 */
-}
-
-.chat-history ul {
-  list-style: none;
-  padding: 0;
-}
-
-.chat-history li {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+.fullscreen-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7); /* 背景模糊效果 */
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  z-index: 9999; /* 确保模态层在最上层 */
 }
 
-.chat-history .status-light {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 10px;
+.fullscreen-image {
+  max-width: 90%;
+  max-height: 90%;
 }
 
-.chat-history .status-green {
-  background-color: green;
+.el-table .warning-row {
+  background: #ee8699;
 }
 
-.chat-history .status-red {
-  background-color: red;
-}
-
-.chat-history .message-content {
-  flex-grow: 1;
-}
-
-.chat-history .execution-time {
-  color: #888;
+.el-table .success-row {
+  background: #f0f9eb;
 }
 </style>
