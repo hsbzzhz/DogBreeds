@@ -2,7 +2,7 @@
 ## About The Project
 ![homepage.png](frontend%2Fsrc%2Fassets%2Fhomepage.png)
 
-- It will show dog pic swiper according to user's input
+- It will show a dog pic swiper according to user's input
 - The server will store whole input history which including time, result and user input
 - Invalid input will be blocked and displays as different color in chat history
 - When you click the image, the image will zoom out
