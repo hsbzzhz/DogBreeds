@@ -1,24 +1,30 @@
 <template>
   <div>
     <h2> Dog Image Generator </h2>
-    <input type="text" v-model="userInput" placeholder="Enter a number (1-8)"/>
-    <button @click="generateDogImages">Generate</button>
+    <el-space>
+      <el-input class="input-search" type="text" v-model="userInput" placeholder="Enter a number (1-8)"/>
+      <el-button type="primary" @click="generateDogImages">Generate</el-button>
+    </el-space>
 
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-    <el-carousel v-if="dogImages.length > 0"
+    <el-carousel class="mt16" v-if="dogImages.length > 0"
                  :interval="5000" arrow="always" trigger="click">
       <el-carousel-item v-for="(image, index) in dogImages" :key="index">
         <img @click="showFullScreenImage(image)" :src="image" class="carousel-image" :alt="index">
       </el-carousel-item>
     </el-carousel>
+
     <div v-if="showModal" class="fullscreen-modal" @click="showModal = false">
       <img :src="currentImage" class="fullscreen-image" alt=""/>
     </div>
     <div class="chat-history" v-if="chatHistory.length > 0">
-      <h3>Chat History</h3>
+      <el-divider>
+        <h3>Chat History</h3>
+      </el-divider>
 
       <el-table
+          size="small"
           :data="chatHistory"
           style="width: 100%"
           :row-class-name="tableRowClassName">
@@ -66,7 +72,7 @@ export default {
       if(!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
         this.errorMessage = 'Please enter an integer from 1 to 8';
       }
-      this.$axios.get(`http://127.0.0.1:5001/api/get-images`, {
+      this.$axios.get(`/api/get-images`, {
         params: {
           number: this.userInput,
           startTime: Date.now()
@@ -84,7 +90,7 @@ export default {
       })
     },
     fetchChatHistory() {
-      this.$axios.get('http://127.0.0.1:5001/api/get-records')
+      this.$axios.get('/api/get-records')
           .then(response => {
             const records = response.data.message;
             if (records.length > 0) {
@@ -112,6 +118,14 @@ export default {
 
 
 <style scoped>
+.mt16{
+  margin-top: 16px;
+}
+
+.input-search{
+  width: 250px;
+}
+
 .el-carousel__item h3 {
   color: #475669;
   font-size: 18px;
@@ -124,7 +138,7 @@ export default {
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: scale-down;
 }
 
 .fullscreen-modal {
@@ -140,16 +154,24 @@ export default {
   z-index: 9999; /* 确保模态层在最上层 */
 }
 
+.chat-history{
+  margin-top: 64px;
+}
+
 .fullscreen-image {
   max-width: 90%;
   max-height: 90%;
 }
 
-.el-table .warning-row {
+:deep(.el-table__body tr)  {
+  pointer-events: none;
+}
+
+:deep(.el-table__body tr.warning-row)  {
   background: #ee8699;
 }
 
-.el-table .success-row {
+:deep(.el-table__body tr.success-row)  {
   background: #f0f9eb;
 }
 </style>

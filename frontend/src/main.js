@@ -7,5 +7,6 @@ import axios from "axios";
 
 const app = createApp(App)
 app.use(ElementPlus)
+axios.defaults.baseURL = 'http://120.26.168.252:5001'
 app.config.globalProperties.$axios = axios
 app.mount('#app')

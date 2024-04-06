@@ -5,9 +5,10 @@ from controller.images import images_bp
 from settings import BaseConfig
 from util.logger import get_log_handler
 
+app = Flask(__name__)
+
 
 def create_app():
-    app = Flask(__name__)
     app.register_blueprint(images_bp)
 
     app.config.from_object("settings.BaseConfig")
@@ -21,3 +22,5 @@ def create_app():
 
 if __name__ == '__main__':
     create_app()
+else:
+    application = app
