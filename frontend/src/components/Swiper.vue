@@ -82,10 +82,10 @@ export default {
           startTime: Date.now()
         }
       }).then(res => {
-        if (res.data.status !== 200) {
-          this.errorMessage = res.data.message
-        } else {
+        if (res.data.status === 200) {
           this.dogImages = res.data.message
+        } else if (res.data.status === 500) {
+          this.errorMessage = res.data.message
         }
 
         //  更新 history
