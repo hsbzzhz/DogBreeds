@@ -15,6 +15,9 @@
       </el-carousel-item>
     </el-carousel>
 
+    <div v-if="dogImages.length > 0">
+      <h4>Dog breeds</h4>
+    </div>
     <div v-if="showModal" class="fullscreen-modal" @click="showModal = false">
       <img :src="currentImage" class="fullscreen-image" alt=""/>
     </div>
@@ -26,6 +29,7 @@
       <el-table
           size="small"
           :data="chatHistory"
+          height="300"
           style="width: 100%"
           :row-class-name="tableRowClassName">
         <el-table-column
@@ -70,7 +74,7 @@ export default {
       this.dogImages = [];
       const inputNumber = Number(this.userInput);
       if(!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
-        this.errorMessage = 'Please enter an integer from 1 to 8';
+        this.errorMessage = 'Please introduce any number between 1 and 8';
       }
       this.$axios.get(`/api/get-images`, {
         params: {
