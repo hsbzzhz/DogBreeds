@@ -9,14 +9,14 @@
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
     <el-carousel class="mt16" v-if="dogImages.length > 0"
-                 :interval="5000" arrow="always" trigger="click">
+                 @change="updateCurrentBreed" :interval="5000" arrow="always" trigger="click">
       <el-carousel-item v-for="(image, index) in dogImages" :key="index">
         <img @click="showFullScreenImage(image)" :src="image" class="carousel-image" :alt="index">
       </el-carousel-item>
     </el-carousel>
 
     <div v-if="dogImages.length > 0">
-      <h4>Dog breeds</h4>
+      <h4>{{currentBreed}}</h4>
     </div>
     <div v-if="showModal" class="fullscreen-modal" @click="showModal = false">
       <img :src="currentImage" class="fullscreen-image" alt=""/>
@@ -57,6 +57,7 @@ export default {
   data() {
     return {
       dogImages: [],
+      currentBreed: '',
       chatHistory: [],
       userInput: '',
       errorMessage: '',
@@ -74,7 +75,7 @@ export default {
       this.dogImages = [];
       const inputNumber = Number(this.userInput);
       if(!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
-        this.errorMessage = 'Please introduce any number between 1 and 8';
+        this.errorMessage = 'Please introduce any number between 1 and 8'
       }
       this.$axios.get(`/api/get-images`, {
         params: {
@@ -85,13 +86,22 @@ export default {
         if (res.data.status === 200) {
           this.dogImages = res.data.message
         } else if (res.data.status === 500) {
-          this.errorMessage = res.data.message
+          this.errorMessage = 'Oops, unable to load data, please try again.'
         }
 
         //  更新 history
         res.data.execution_time = new Date(parseInt(res.data.execution_time)).toLocaleString()
         this.chatHistory.unshift(res.data)
       })
+    },
+    updateCurrentBreed(index) {
+      const imageUrl = this.dogImages[index];
+      const breedMatch = imageUrl.match(/breeds\/([^/]+)\//);
+      if (breedMatch && breedMatch[1]) {
+        this.currentBreed = breedMatch[1].replace(/-/g, ' '); // 替换链接中的'-'为空格以美化品种名称
+      } else {
+        this.currentBreed = 'Unknown Breed'; // 如果没有匹配到品种，则显示"Unknown Breed"
+      }
     },
     fetchChatHistory() {
       this.$axios.get('/api/get-records')
