@@ -9,14 +9,17 @@
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
     <el-carousel class="mt16" v-if="dogImages.length > 0"
-                 @change="updateCurrentBreed" :interval="5000" arrow="always" trigger="click">
+                 @change="updateCurrentBreed"
+                 :interval="5000"
+                 arrow="always"
+                 trigger="click">
       <el-carousel-item v-for="(image, index) in dogImages" :key="index">
         <img @click="showFullScreenImage(image)" :src="image" class="carousel-image" :alt="index">
       </el-carousel-item>
     </el-carousel>
 
     <div v-if="dogImages.length > 0">
-      <h4>{{currentBreed}}</h4>
+      <h4>{{ currentBreed }}</h4>
     </div>
     <div v-if="showModal" class="fullscreen-modal" @click="showModal = false">
       <img :src="currentImage" class="fullscreen-image" alt=""/>
@@ -74,7 +77,7 @@ export default {
       this.errorMessage = '';
       this.dogImages = [];
       const inputNumber = Number(this.userInput);
-      if(!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
+      if (!(Number.isInteger(inputNumber) && inputNumber >= 1 && inputNumber <= 8)) {
         this.errorMessage = 'Please introduce any number between 1 and 8'
       }
       this.$axios.get(`/api/get-images`, {
@@ -85,6 +88,9 @@ export default {
       }).then(res => {
         if (res.data.status === 200) {
           this.dogImages = res.data.message
+          const breedMatch = this.dogImages[0].match(/breeds\/([^/]+)\//)
+          this.currentBreed = breedMatch[1].replace(/-/g, ' ')
+
         } else if (res.data.status === 500) {
           this.errorMessage = 'Oops, unable to load data, please try again.'
         }
@@ -132,11 +138,11 @@ export default {
 
 
 <style scoped>
-.mt16{
+.mt16 {
   margin-top: 16px;
 }
 
-.input-search{
+.input-search {
   width: 250px;
 }
 
@@ -168,7 +174,7 @@ export default {
   z-index: 9999; /* 确保模态层在最上层 */
 }
 
-.chat-history{
+.chat-history {
   margin-top: 64px;
 }
 
@@ -177,15 +183,15 @@ export default {
   max-height: 90%;
 }
 
-:deep(.el-table__body tr)  {
+:deep(.el-table__body tr) {
   pointer-events: none;
 }
 
-:deep(.el-table__body tr.warning-row)  {
+:deep(.el-table__body tr.warning-row) {
   background: #ee8699;
 }
 
-:deep(.el-table__body tr.success-row)  {
+:deep(.el-table__body tr.success-row) {
   background: #f0f9eb;
 }
 </style>
